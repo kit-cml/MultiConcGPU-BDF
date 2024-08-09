@@ -69,7 +69,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     bool is_peak = false;
     // to search max dvmdt repol
 
-    tcurr[sample_id] = 0.000001;
+    tcurr[sample_id] = 0.0;
     dt[sample_id] = p_param->dt;
     double tmax;
     double max_time_step = 1.0, time_point = 25.0;
@@ -241,7 +241,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
               
           is_eligible_AP = false;
           // new part ends
-           if(sample_id == 1000 || sample_id == 2000 || sample_id == 3000 || sample_id == 4000 || sample_id == 5000 || sample_id == 6000 || sample_id == 7000 || sample_id == 8000 || sample_id == 9000 ){
+           if(sample_id == 0 || sample_id == 1000 || sample_id == 2000 || sample_id == 3000 || sample_id == 4000 || sample_id == 5000 || sample_id == 6000 || sample_id == 7000 || sample_id == 8000 || sample_id == 9000 ){
             printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, conc: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol, conc);
           }
           // printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
