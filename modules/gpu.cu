@@ -132,10 +132,10 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 	  // static const int CURRENT_SCALING = 1000;
 
     // printf("Core %d:\n",sample_id);
-    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_cvar, p_param->is_dutta, p_param->is_cvar, sample_id);
+    initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     
-
     applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
+
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
     // generate file for time-series output
@@ -151,12 +151,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
-        dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, 
-        d_CONSTANTS, 
-        d_RATES, 
-        d_STATES, 
-        d_ALGEBRAIC, 
-        sample_id); 
+        dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
         
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
@@ -167,7 +162,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         else{
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
 
-          // new part starts
+          // new part starts, different from example
           if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
             temp_result[sample_id].qnet_ap = qnet_ap;
             temp_result[sample_id].qnet4_ap = qnet4_ap;
@@ -250,7 +245,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // writen = false;
         }
 
-        solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES,  dt[sample_id], sample_id);
+        solveBDF1(tcurr[sample_id], dt[sample_id], epsilon, d_CONSTANTS, d_STATES, d_ALGEBRAIC, y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed, sample_id);
 
 
         if (pace_count >= pace_max-last_drug_check_pace)
@@ -289,7 +284,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 			    // calculate AP shape
 			    if(is_eligible_AP && d_STATES[(sample_id * num_of_states) +V] > vm_repol90)
           {
-
+          // different from example
           inet_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +Ito]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKs]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IK1]);
           inet4_ap = (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +IKr]+d_ALGEBRAIC[(sample_id * num_of_algebraic) +INa]);
           qnet_ap += (inet_ap * dt[sample_id])/1000.;
@@ -303,6 +298,17 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           qnet4_cl += (inet4_cl * dt[sample_id])/1000.;
           inal_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +INaL]*dt[sample_id]);
           ical_auc_cl += (d_ALGEBRAIC[(sample_id * num_of_algebraic) +ICaL]*dt[sample_id]);
+
+          //part from example
+          if((pace_count >= pace_max-last_drug_check_pace) && (pace_count<pace_max) ){
+            int counter;
+            for(counter=0; counter<num_of_states; counter++){
+              d_all_states[(sample_id * num_of_states) + counter + (sample_size * (pace_count - last_drug_check_pace))] = d_STATES[(sample_id * num_of_states) + counter];
+              // d_all_states[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+              // printf("%lf\n", d_all_states[(sample_id * num_of_states) + counter]);
+            }
+          
+          }
 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
@@ -355,6 +361,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 		    } // end the last 250 pace operations
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
         //printf("t after addition: %lf\n", tcurr[sample_id]);
+        
+        // finish if nan
+        if(isnan(d_STATES[(sample_id * num_of_states) + V]) == true) {
+          printf("core %d has nan, ejecting\n", sample_id);
+          return;
+        }
        
     } // while loop ends here 
     // __syncthreads();
