@@ -1,5 +1,6 @@
 // #include "cellmodels/enums/enum_Ohara_Rudy_2011.hpp"
-#include "../cellmodels/Ohara_Rudy_2011.hpp"
+// #include "../cellmodels/Ohara_Rudy_2011.hpp"
+#include "../cellmodels/Ohara_Rudy_cipa_v1_2017.hpp"
 #include <stdio.h>
 #include <cuda_runtime.h>
 #include <cuda.h>
@@ -17,7 +18,7 @@ differences are related to GPU offset calculations
 */
 
 __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
-                                        double *d_STATES_RESULT, 
+                                        double *d_STATES_RESULT, double *d_all_states, double *d_herg,
                                       //  double *time, double *states, double *out_dt,  double *cai_result, 
                                       //  double *ina, double *inal,
                                       //  double *ical, double *ito,
@@ -25,16 +26,17 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
                                       //  double *ik1,
                                        double *tcurr, double *dt, unsigned short sample_id, unsigned int sample_size,
                                        cipa_t *temp_result, cipa_t *cipa_result,
-                                       param_t *p_param
+                                       param_t *p_param,
+                                       double *y, double *y_new, double *F, double *delta, double *Jc, double *y_perturbed, double *g0, double *g_perturbed
                                        )
     {
     
     unsigned int input_counter = 0;
 
-    int num_of_constants = 146;
-    int num_of_states = 41;
-    int num_of_algebraic = 199;
-    int num_of_rates = 41;
+    int num_of_constants = 206;
+    int num_of_states = 49;
+    int num_of_algebraic = 200;
+    int num_of_rates = 49;
 
 
     // INIT STARTS
@@ -361,7 +363,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
 
 __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_conc, double *d_CONSTANTS, double *d_STATES, double *d_RATES, double *d_ALGEBRAIC, 
-                                      double *d_STATES_RESULT, 
+                                      double *d_STATES_RESULT, double *d_all_states, double *d_herg,
                                       // double *time, double *states, double *out_dt,  double *cai_result, 
                                       // double *ina, double *inal, 
                                       // double *ical, double *ito,
@@ -369,7 +371,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
                                       // double *ik1,
                                       unsigned int sample_size,
                                       cipa_t *temp_result, cipa_t *cipa_result,
-                                      param_t *p_param
+                                      param_t *p_param,
+                                      double *y, double *y_new, double *F, double *delta, double *Jc, double *y_perturbed, double *g0, double *g_perturbed
                                       )
   {
     unsigned short thread_id;
@@ -382,7 +385,7 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
     // printf("in\n");
     // printf("Calculating %d\n",thread_id);
     kernel_DoDrugSim(d_ic50, d_cvar, d_conc[thread_id], d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
-                          d_STATES_RESULT, 
+                          d_STATES_RESULT, d_all_states, d_herg,
                           // time, states, out_dt, cai_result,
                           // ina, inal, 
                           // ical, ito,
@@ -390,7 +393,8 @@ __global__ void kernel_DrugSimulation(double *d_ic50, double *d_cvar, double *d_
                           // ik1,
                           time_for_each_sample, dt_for_each_sample, thread_id, sample_size,
                           temp_result, cipa_result,
-                          p_param
+                          p_param,
+                          y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed
                           );
                           // __syncthreads();
     // printf("Calculation for core %d done\n",sample_id);

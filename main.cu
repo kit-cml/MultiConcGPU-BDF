@@ -352,6 +352,9 @@ int main(int argc, char **argv) {
     setvbuf(stdout, NULL, _IONBF, 0);
 
     // NEW CODE STARTS HERE //
+    // for qinwards calculation
+    double inal_auc_control = -90.547322;    // AUC of INaL under control model
+    double ical_auc_control = -105.935067;   // AUC of ICaL under control model
     // mycuda *thread_id;
     // cudaMalloc(&thread_id, sizeof(mycuda));
 
@@ -408,10 +411,10 @@ int main(int argc, char **argv) {
 
         cipa_t *temp_result, *cipa_result;
 
-        int num_of_constants = 146;
-        int num_of_states = 41;
-        int num_of_algebraic = 199;
-        int num_of_rates = 41;
+        int num_of_constants = 206;
+        int num_of_states = 49;
+        int num_of_algebraic = 200;
+        int num_of_rates = 49;
 
         printf("%s\n", p_param->hill_file); // testingAuto
         int sample_size = get_IC50_data_from_file(p_param->hill_file, ic50, conc, drug_name);
@@ -429,11 +432,30 @@ int main(int argc, char **argv) {
             printf("Reading: %d Conductance Variability samples\n", cvar_sample);
         }
 
+         // for BDF
+        double *d_all_states;
+        double *d_herg;
+
+        double *y; double *y_new; double *F; double *delta; double *Jc; 
+        double *y_perturbed; double *g0; double *g_perturbed; 
+        cudaMalloc(&y, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&y_new, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&F, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&delta, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&Jc, num_of_states * num_of_states * sample_size * sizeof(double));
+
+        cudaMalloc(&y_perturbed, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&g0, num_of_states * sample_size * sizeof(double));
+        cudaMalloc(&g_perturbed, num_of_states * sample_size * sizeof(double));
+
+        cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double)); // for each sample
+        cudaMalloc(&d_herg, 6 * sizeof(double));
+
         prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param);
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
-        const int thread = 32;
+        const int thread = 25;
         int block = (sample_size + thread - 1) / thread;
         // int block = (sample_size + thread - 1) / thread;
         if (gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1) {
@@ -446,13 +468,27 @@ int main(int argc, char **argv) {
         // initscr();
         // printf("[____________________________________________________________________________________________________]  0.00 %% \n");
 
-        kernel_DrugSimulation<<<block, thread>>>(d_ic50, d_cvar, d_conc, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC,
-                                                 d_STATES_RESULT,
-                                                 sample_size,
-                                                 temp_result, cipa_result,
-                                                 d_p_param);
+        // kernel_DrugSimulation<<<block, thread>>>(d_ic50, d_cvar, d_conc, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC,
+        //                                          d_STATES_RESULT,
+        //                                          sample_size,
+        //                                          temp_result, cipa_result,
+        //                                          d_p_param,
+        //                                          y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed);
         // block per grid, threads per block
         // endwin();
+
+        kernel_DrugSimulation<<<block,thread>>>(d_ic50, d_cvar, d_conc, d_CONSTANTS, d_STATES, d_RATES, d_ALGEBRAIC, 
+                                                d_STATES_RESULT, d_all_states, d_herg,
+                                                // time, states, dt, cai_result,
+                                                // ina, inal, 
+                                                // ical, ito,
+                                                // ikr, iks, 
+                                                // ik1,
+                                                sample_size,
+                                                temp_result, cipa_result,
+                                                d_p_param,
+                                                y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed
+                                                );
 
         cudaDeviceSynchronize();
 
