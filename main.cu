@@ -294,6 +294,35 @@ int get_cvar_data_from_file(const char *file_name, unsigned int limit, double *c
     return sample_size;
 }
 
+int get_herg_data_from_file(const char* file_name, double *herg)
+{
+  FILE *fp_herg;
+  char *token;
+  char buffer_herg[255];
+  unsigned int idx;
+
+  if( (fp_herg = fopen(file_name, "r")) == NULL){
+    printf("Cannot open file %s\n", file_name);
+    return 0;
+  }
+  idx = 0;
+  int sample_size = 0;
+  fgets(buffer_herg, sizeof(buffer_herg), fp_herg); // skip header
+  while( fgets(buffer_herg, sizeof(buffer_herg), fp_herg) != NULL )
+    { // begin line reading
+      token = strtok( buffer_herg, "," );
+      while( token != NULL )
+      { // begin data tokenizing
+        herg[idx++] = strtod(token, NULL);
+        token = strtok(NULL, ",");
+      } // end data tokenizing
+      sample_size++;
+    } // end line reading
+
+  fclose(fp_herg);
+  return sample_size;
+}
+
 drug_t get_IC50_data_from_file(const char *file_name);
 // return error and message based on the IC50 data
 int check_IC50_content(const drug_t *ic50, const param_t *p_param) {
