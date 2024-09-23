@@ -399,6 +399,7 @@ int main(int argc, char **argv) {
 
         ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
         conc = (double *)malloc(sample_limit * sizeof(double));
+        double* herg = (double *)malloc(6 * sizeof(double));
 
         double *d_ic50;
         double *d_conc;
@@ -424,6 +425,19 @@ int main(int argc, char **argv) {
         //     printf("Too much input! Maximum sample data is 2000!\n");
         printf("Sample size: %d\n", sample_size);
         printf("Set GPU Number: %d\n", p_param->gpu_index);
+
+        printf("Sample size: %d\n",sample_size);
+
+        int herg_size = get_herg_data_from_file(p_param->herg_file, herg);
+        if(herg_size == 0)
+            printf("Something problem with the herg file!\n");
+        
+        printf("herg check:\n");
+            for(int temp = 0; temp<6; temp++){
+            printf("%lf, ",herg[temp]);
+            } 
+            printf("\n");
+
 
         cudaSetDevice(p_param->gpu_index);
 
@@ -455,7 +469,10 @@ int main(int argc, char **argv) {
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
-        const int thread = 25;
+        int thread = 32;
+        if (sample_size<thread){
+        thread = sample_size;
+        }
         int block = (sample_size + thread - 1) / thread;
         // int block = (sample_size + thread - 1) / thread;
         if (gpu_check(15 * sample_size * datapoint_size * sizeof(double) + sizeof(param_t)) == 1) {
