@@ -399,7 +399,7 @@ int main(int argc, char **argv) {
 
         ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
         conc = (double *)malloc(sample_limit * sizeof(double));
-        double* herg = (double *)malloc(6 * sizeof(double));
+        double* herg = (double *)malloc(5 * sample_limit * sizeof(double));
 
         double *d_ic50;
         double *d_conc;
@@ -432,7 +432,7 @@ int main(int argc, char **argv) {
         if(herg_size == 0)
             printf("Something problem with the herg file!\n");
         
-        printf("herg check:\n");
+        printf("herg size: %d herg check:\n", herg_size);
             for(int temp = 0; temp<6; temp++){
             printf("%lf, ",herg[temp]);
             } 
@@ -463,7 +463,7 @@ int main(int argc, char **argv) {
         cudaMalloc(&g_perturbed, num_of_states * sample_size * sizeof(double));
 
         cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double)); // for each sample
-        cudaMalloc(&d_herg, 6 * sizeof(double));
+        cudaMalloc(&d_herg, 5 * sample_size * sizeof(double));
 
         prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param);
 
