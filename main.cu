@@ -305,6 +305,7 @@ int get_herg_data_from_file(const char* file_name, double *herg)
     printf("Cannot open file %s\n", file_name);
     return 0;
   }
+  printf("Herg file %s\n", file_name);
   idx = 0;
   int sample_size = 0;
   fgets(buffer_herg, sizeof(buffer_herg), fp_herg); // skip header
@@ -399,7 +400,7 @@ int main(int argc, char **argv) {
 
         ic50 = (double *)malloc(14 * sample_limit * sizeof(double));
         conc = (double *)malloc(sample_limit * sizeof(double));
-        double* herg = (double *)malloc(5 * sample_limit * sizeof(double));
+        double* herg = (double *)malloc(6 * sample_limit * sizeof(double));
 
         double *d_ic50;
         double *d_conc;
@@ -463,7 +464,7 @@ int main(int argc, char **argv) {
         cudaMalloc(&g_perturbed, num_of_states * sample_size * sizeof(double));
 
         cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double)); // for each sample
-        cudaMalloc(&d_herg, 5 * sample_size * sizeof(double));
+        cudaMalloc(&d_herg, 6 * sample_size * sizeof(double));
 
         prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param);
 
