@@ -134,7 +134,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     
-    applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
+    // iniitally due to 
+    // applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
@@ -152,6 +153,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
         dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
+        // dt_set = 1.0; //for testing only
         
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
@@ -246,6 +248,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         }
 
         solveBDF1(tcurr[sample_id], dt[sample_id], epsilon, d_CONSTANTS, d_STATES, d_ALGEBRAIC, y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed, sample_id);
+
 
 
         if (pace_count >= pace_max-last_drug_check_pace)
