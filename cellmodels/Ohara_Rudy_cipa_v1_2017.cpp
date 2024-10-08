@@ -1094,7 +1094,7 @@ __device__ void computeRates( double TIME, double *CONSTANTS, double *RATES, dou
     RATES[(rates_size * offset) + cajsr] =  ALGEBRAIC[(algebraic_size * offset) + Bcajsr]*(ALGEBRAIC[(algebraic_size * offset) + Jtr] - ALGEBRAIC[(algebraic_size * offset) + Jrel]);
 }
 
-__device__ void solveAnalytical( double *STATES, double *RATES, double dt, int offset)
+__device__ void solveEuler( double *STATES, double *RATES, double dt, int offset)
 {
     short states_size = 49;
     short rates_size = 49;
