@@ -249,8 +249,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
         solveBDF1(tcurr[sample_id], dt[sample_id], epsilon, d_CONSTANTS, d_STATES, d_ALGEBRAIC, y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed, sample_id);
 
-
-
         if (pace_count >= pace_max-last_drug_check_pace)
         {
           

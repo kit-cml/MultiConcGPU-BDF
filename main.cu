@@ -554,7 +554,7 @@ int main(int argc, char **argv) {
         strcat(filename, "_state_only.csv");
         // sample loop
         writer = fopen(filename, "w");
-        fprintf(writer, "V,CaMKt,cass,nai,nass,ki,kss,cansr,cajsr,cai,m,hf,hs,j,hsp,jp,mL,hL,hLp,a,iF,iS,ap,iFp,iSp,d,ff,fs,fcaf,fcas,jca,ffp,fcafp,nca,xrf,xrs,xs1,xs2,xk1,Jrelnp,Jrelp,\n");
+        fprintf(writer, "V,CaMKt,cass,nai,nass,ki,kss,cansr,cajsr,cai,m,hf,hs,j,hsp,jp,mL,hL,hLp,a,iF,iS,ap,iFp,iSp,d,ff,fs,fcaf,fcas,jca,ffp,fcafp,nca,IC1,IC2,C1,C2,O,IO,IObound,Obound,Cbound,D,xs1,xs2,xk1,Jrelnp,Jrelp\n");
         for (int sample_id = 0; sample_id < sample_size; sample_id++) {
 
             // fprintf(writer,"%d,",sample_id);
