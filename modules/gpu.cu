@@ -143,7 +143,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
     tmax = pace_max * bcl;
     int pace_count = 0;
-    
+    bool is_euler = false;
   
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
@@ -152,8 +152,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     {
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
-        dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
-        // dt_set = 1.0; //for testing only
+        if(is_euler){
+            dt_set = 0.005;
+        }
+        else {
+            dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
+        }
         
         // printf("tcurr at core %d: %lf\n",sample_id,tcurr[sample_id]);
         if (floor((tcurr[sample_id] + dt_set) / bcl) == floor(tcurr[sample_id] / bcl)) { 
@@ -247,7 +251,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // writen = false;
         }
 
+       if(is_euler) {
+            solveEuler( d_STATES, d_RATES, dt[sample_id], sample_id);
+        }
+        else{
+        // solveAnalytical(d_CONSTANTS, d_STATES, d_ALGEBRAIC, d_RATES, dt[sample_id], sample_id);
         solveBDF1(tcurr[sample_id], dt[sample_id], epsilon, d_CONSTANTS, d_STATES, d_ALGEBRAIC, y, y_new, F, delta, Jc, y_perturbed, g0, g_perturbed, sample_id);
+        }
 
         if (pace_count >= pace_max-last_drug_check_pace)
         {
@@ -368,6 +378,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           printf("core %d has nan, ejecting\n", sample_id);
           return;
         }
+
+         if (sample_id == 0 && is_euler) printf("time: %lf\n", tcurr[0]);
        
     } // while loop ends here 
     // __syncthreads();
