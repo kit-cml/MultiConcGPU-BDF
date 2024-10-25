@@ -143,7 +143,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
     tmax = pace_max * bcl;
     int pace_count = 0;
-    bool is_euler = true;
+    bool is_euler = false;
   
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
@@ -170,7 +170,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           dt[sample_id] = (floor(tcurr[sample_id] / bcl) + 1) * bcl - tcurr[sample_id];
 
           // new part starts, different from example
-          // if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
+          if( is_eligible_AP && pace_count >= pace_max-last_drug_check_pace) {
             temp_result[sample_id].qnet_ap = qnet_ap;
             temp_result[sample_id].qnet4_ap = qnet4_ap;
             temp_result[sample_id].inal_auc_ap = inal_auc_ap;
@@ -187,7 +187,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
             //   }
 
 
-            // if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
+            if( temp_result[sample_id].dvmdt_repol > cipa_result[sample_id].dvmdt_repol ) {
               pace_steepest = pace_count;
               // printf("Steepest pace updated: %d dvmdt_repol: %lf\n",pace_steepest,temp_result[sample_id].dvmdt_repol);
               // cipa_result = temp_result;
@@ -204,16 +204,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
               cipa_result[sample_id].dvmdt_repol = temp_result[sample_id].dvmdt_repol;
               cipa_result[sample_id].vm_peak = temp_result[sample_id].vm_peak;
               cipa_result[sample_id].vm_valley = d_STATES[(sample_id * num_of_states) +V];
-              // is_peak = true;
+              is_peak = true;
               init_states_captured = false;
-              // }
-            // else{
-            //   is_peak = false;
-            // }
-
-
-
-          // };
+              }
+            else{
+              is_peak = false;
+            }
+          };
 
           
           inet_ap = 0.;
@@ -333,9 +330,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           //this is for taking only the last pace, yeah
 
-          if((pace_count >= pace_max-last_drug_check_pace) )
-          {
-            
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
+          {  
             // printf("init_states_captured: %d\n",init_states_captured);
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
             temp_result[sample_id].cai_data[cipa_datapoint] =  d_STATES[(sample_id * num_of_states) +cai] ;
@@ -347,13 +343,13 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
-            // if(init_states_captured == false){
-              // if (sample_id == 0 && is_euler) printf("in the pace writing\n");
-              // for(int counter=0; counter<num_of_states; counter++){
-              //   d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-              // }
-              // init_states_captured = true;
-            // }
+            if(init_states_captured == false){
+              if (sample_id == 0 && is_euler) printf("in the pace writing\n");
+              for(int counter=0; counter<num_of_states; counter++){
+                d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+              }
+              init_states_captured = true;
+            }
 
             // time series result
 
@@ -378,7 +374,6 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
             input_counter = input_counter + sample_size;
             cipa_datapoint = cipa_datapoint + 1; // this causes the resource usage got so mega and crashed in running
-
            
              } // temporary guard ends here
 
@@ -393,7 +388,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           return;
         }
 
-         if (sample_id == 0 && is_euler) printf("time: %lf\n", tcurr[0]);
+         //if (sample_id == 0 && is_euler) printf("time: %lf\n", tcurr[0]);
        
     } // while loop ends here 
     // __syncthreads();
