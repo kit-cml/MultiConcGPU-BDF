@@ -143,7 +143,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
     tmax = pace_max * bcl;
     int pace_count = 0;
-    bool is_euler = false;
+    bool is_euler = true;
   
     // printf("%d,%lf,%lf,%lf,%lf\n", sample_id, dt[sample_id], tcurr[sample_id], d_STATES[V + (sample_id * num_of_states)],d_RATES[V + (sample_id * num_of_rates)]);
     // printf("%lf,%lf,%lf,%lf,%lf\n", d_ic50[0 + (14*sample_id)], d_ic50[1+ (14*sample_id)], d_ic50[2+ (14*sample_id)], d_ic50[3+ (14*sample_id)], d_ic50[4+ (14*sample_id)]);
@@ -153,7 +153,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
         computeRates(tcurr[sample_id], d_CONSTANTS, d_RATES, d_STATES, d_ALGEBRAIC, sample_id); 
         
         if(is_euler){
-            dt_set = 0.005;
+            dt_set = 0.003;
         }
         else {
             dt_set = set_time_step( tcurr[sample_id], time_point, max_time_step, d_CONSTANTS, d_RATES, sample_id); 
@@ -251,6 +251,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // new part ends
            if(sample_id == 0 || sample_id == 1000 || sample_id == 2000 || sample_id == 3000 || sample_id == 4000 || sample_id == 5000 || sample_id == 6000 || sample_id == 7000 || sample_id == 8000 || sample_id == 9000 ){
             printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, conc: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol, conc);
+             printf("is peak: %d\n", is_peak);
           }
           // printf("core: %d pace count: %d t: %lf, steepest: %d, dvmdt_repol: %lf, t_peak: %lf\n",sample_id,pace_count, tcurr[sample_id], pace_steepest, cipa_result[sample_id].dvmdt_repol,t_peak_capture);
           // writen = false;
@@ -329,8 +330,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // save temporary result -> ALL TEMP RESULTS IN, TEMP RESULT != WRITTEN RESULT
           // if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           //this is for taking only the last pace, yeah
-
-          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
+          //comment is peak true if you want to take last pace!
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true))
           {  
             // printf("init_states_captured: %d\n",init_states_captured);
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
@@ -343,13 +344,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
-            if(init_states_captured == false){
-              if (sample_id == 0 && is_euler) printf("in the pace writing\n");
+            // if(init_states_captured == false){
+              // if (sample_id == 0 && is_euler) printf("in the pace writing\n");
               for(int counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+                // if (sample_id == 1) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
               }
-              init_states_captured = true;
-            }
+            //   init_states_captured = true;
+            // }
 
             // time series result
 
@@ -380,7 +382,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 		    } // end the last 250 pace operations
 
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
-        //printf("t after addition: %lf\n", tcurr[sample_id]);
+        // printf("t after addition: %lf\n", tcurr[sample_id]);
+       
         
         // finish if nan
         if(isnan(d_STATES[(sample_id * num_of_states) + V]) == true) {
