@@ -331,7 +331,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           //this is for taking only the last pace, yeah
           //comment is peak true if you want to take last pace!
-          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true))
+          if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max))
           {  
             // printf("init_states_captured: %d\n",init_states_captured);
             // datapoint_at_this_moment = tcurr[sample_id] - (pace_count * bcl);
@@ -344,14 +344,14 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
 
-            // if(init_states_captured == false){
-              // if (sample_id == 0 && is_euler) printf("in the pace writing\n");
+            if(init_states_captured == false){
+              if (sample_id == 0 && is_euler) printf("in the pace writing\n");
               for(int counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
                 // if (sample_id == 1) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
               }
-            //   init_states_captured = true;
-            // }
+              init_states_captured = true;
+            }
 
             // time series result
 
