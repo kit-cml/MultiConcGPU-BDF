@@ -470,7 +470,7 @@ int main(int argc, char **argv) {
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");
-        int thread = 32;
+        int thread = 20;
         if (sample_size<thread){
         thread = sample_size;
         }
