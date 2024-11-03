@@ -343,12 +343,12 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
-
+            //if (sample_id == 0 && is_euler) printf("in\n");
             if(init_states_captured == false){
               if (sample_id == 0 && is_euler) printf("in the pace writing\n");
               for(int counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-                // if (sample_id == 1) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
+                if (sample_id == 1) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
               }
               init_states_captured = true;
             }

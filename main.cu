@@ -453,15 +453,15 @@ int main(int argc, char **argv) {
 
         double *y; double *y_new; double *F; double *delta; double *Jc; 
         double *y_perturbed; double *g0; double *g_perturbed; 
-        cudaMalloc(&y, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&y_new, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&F, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&delta, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&Jc, num_of_states * num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&y, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&y_new, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&F, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&delta, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&Jc, num_of_states * num_of_states * sample_size * sizeof(double));
 
-        cudaMalloc(&y_perturbed, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&g0, num_of_states * sample_size * sizeof(double));
-        cudaMalloc(&g_perturbed, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&y_perturbed, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&g0, num_of_states * sample_size * sizeof(double));
+        // cudaMalloc(&g_perturbed, num_of_states * sample_size * sizeof(double));
 
         cudaMalloc(&d_all_states, num_of_states * sample_size * p_param->find_steepest_start * sizeof(double)); // for each sample
         cudaMalloc(&d_herg, 6 * sample_size * sizeof(double));
@@ -522,11 +522,12 @@ int main(int argc, char **argv) {
         printf("copying the data back to the CPU \n");
 
         cudaMemcpy(h_states, d_STATES_RESULT, sample_size * num_of_states * sizeof(double), cudaMemcpyDeviceToHost);
+        printf("\n\n h_states sampling: %lf\n",h_states[0]);
         cudaMemcpy(h_cipa_result, cipa_result, sample_size * sizeof(cipa_t), cudaMemcpyDeviceToHost);
         printf("Successfully reach here!!");
         // TODO: Automation 4. Free up GPU memory
-        freeingGPUMemory(d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES,
-                         d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50);
+        // freeingGPUMemory(d_ALGEBRAIC, d_CONSTANTS, d_RATES, d_STATES,
+        //                 d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50);
 
         FILE *writer;
         int check;
