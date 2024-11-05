@@ -1,5 +1,5 @@
 Basic_Cycle_Length = 1000.0
-Number_of_Pacing = 1000
+Number_of_Pacing = 100
 Simulation_Mode = 0
 Celltype = 0
 Is_Dutta = 1
