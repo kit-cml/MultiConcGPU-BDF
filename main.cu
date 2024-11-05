@@ -238,21 +238,21 @@ int get_IC50_data_from_file(const char *file_name, double *ic50, double *conc, c
         */
 
         token = strtok(buffer_ic50, ",");
-        printf("%s\n", token); // testingAuto
+        // printf("%s\n", token); // testingAuto
         strcpy(tmp_drug_name, token);
         token = strtok(NULL, ",");
-        printf("%s\n", token); // testingAuto
+        // printf("%s\n", token); // testingAuto
         strcat(tmp_drug_name, "_");
         strcat(tmp_drug_name, token);
         
-        printf("%s\n", tmp_drug_name); // testingAuto
+        // printf("%s\n", tmp_drug_name); // testingAuto
         addDrugData(&drug_name, drugsize, tmp_drug_name);
         conc[idx_conc++] = strtod(token, NULL);
         token = strtok(NULL, ",");
         // Check if there is wrong in here
         while (token != NULL) { // begin data tokenizing
             ic50[idx_ic50++] = strtod(token, NULL);
-            printf("%s\n", token); // testingAuto
+            // printf("%s\n", token); // testingAuto
             token = strtok(NULL, ",");
         } // end data tokenizing
         sample_size++;
@@ -467,6 +467,7 @@ int main(int argc, char **argv) {
         cudaMalloc(&d_herg, 6 * sample_size * sizeof(double));
 
         prepingGPUMemory(d_ALGEBRAIC, num_of_algebraic, sample_size, d_CONSTANTS, num_of_constants, d_RATES, num_of_rates, d_STATES, num_of_states, d_p_param, temp_result, cipa_result, d_STATES_RESULT, d_ic50, ic50, d_conc, conc, p_param);
+        cudaMemcpy(d_herg, herg, sample_size * 6 * sizeof(double), cudaMemcpyHostToDevice);
 
         tic();
         printf("Timer started, doing simulation.... \n\n\nGPU Usage at this moment: \n");

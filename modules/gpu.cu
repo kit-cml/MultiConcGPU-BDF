@@ -130,12 +130,17 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
 
     // static const int CALCIUM_SCALING = 1000000;
 	  // static const int CURRENT_SCALING = 1000;
-
+  if (sample_id == 0){
+  printf("in GPU hERG check:\n");
+  for(int idx = 0; idx < 6; idx++){
+    printf("%lf,\n", d_herg[idx]);
+    }
+    }
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     
     // iniitally due to 
-    // applyDrugEffect(d_CONSTANTS, conc, d_ic50, epsilon, sample_id);
+    // applyDrugEffect(d_CONSTANTS, conc, d_ic50, sample_id);
 
     d_CONSTANTS[BCL + (sample_id * num_of_constants)] = bcl;
 
