@@ -135,7 +135,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
   for(int idx = 0; idx < 6; idx++){
     printf("%lf,\n", d_herg[idx]);
     }
-    }
+  }
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
     
@@ -353,7 +353,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
               if (sample_id == 0 && is_euler) printf("in the pace writing\n");
               for(int counter=0; counter<num_of_states; counter++){
                 d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-                if (sample_id == 1) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
+                if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
               }
               init_states_captured = true;
             }
