@@ -133,8 +133,9 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
   if (sample_id == 0){
   printf("in GPU hERG check:\n");
   for(int idx = 0; idx < 6; idx++){
-    printf("%lf,\n", d_herg[idx]);
+    printf("%lf,", d_herg[idx]);
     }
+    printf("\n");
   }
     // printf("Core %d:\n",sample_id);
     initConsts(d_CONSTANTS, d_STATES, type, conc, d_ic50, d_herg, d_cvar, p_param->is_dutta, p_param->is_cvar, bcl, epsilon, sample_id);
@@ -336,6 +337,8 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
           // if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max) )
           //this is for taking only the last pace, yeah
           //comment is peak true if you want to take last pace!
+
+          // temporary guard starts here
           if((pace_count >= pace_max-last_drug_check_pace) && (is_peak == true) && (pace_count<pace_max))
           {  
             // printf("init_states_captured: %d\n",init_states_captured);
@@ -349,15 +352,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
             temp_result[sample_id].dvmdt_data[cipa_datapoint] = d_RATES[(sample_id * num_of_rates) +V];
             temp_result[sample_id].dvmdt_time[cipa_datapoint] = tcurr[sample_id];
             //if (sample_id == 0 && is_euler) printf("in\n");
-            if(init_states_captured == false){
-              if (sample_id == 0 && is_euler) printf("in the pace writing\n");
-              for(int counter=0; counter<num_of_states; counter++){
-                d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
-                if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[(sample_id * num_of_states) + counter]);
-              }
-              init_states_captured = true;
-            }
-
+            
             // time series result
 
             // time[input_counter + sample_id] = tcurr[sample_id];
@@ -384,9 +379,20 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
            
              } // temporary guard ends here
 
+             // capture temp
+             if(init_states_captured == false){
+              if (sample_id == 0 && is_euler) printf("in the pace writing\n");
+              for(int counter=0; counter<num_of_states; counter++){
+                d_STATES_RESULT[(sample_id * num_of_states) + counter] = d_STATES[(sample_id * num_of_states) + counter];
+                if (sample_id == 0) {printf("%lf ", d_STATES_RESULT[(sample_id * num_of_states) + counter]);printf("\n");}
+              }
+              init_states_captured = true;
+            }
+
 		    } // end the last 250 pace operations
 
         tcurr[sample_id] = tcurr[sample_id] + dt[sample_id];
+        // if (sample_id == 0) printf("%lf\n", d_STATES_RESULT[0]);
         // printf("t after addition: %lf\n", tcurr[sample_id]);
        
         
