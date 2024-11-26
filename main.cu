@@ -35,26 +35,6 @@ struct CStringCompare {
     }
 };
 
-// Function to get unique C-style strings from an array
-// const char** getUniqueStrings(const char** stringArray, size_t arraySize, size_t& uniqueSize) {
-//     // Use std::set with custom comparison function to get unique values
-//     std::set<const char*, CStringCompare> uniqueStringsSet(stringArray, stringArray + arraySize);
-
-//     // Create a new array to store unique strings
-//     const char** uniqueArray = new const char*[uniqueStringsSet.size()];
-//     size_t index = 0;
-
-//     // Copy unique strings to the new array
-//     for (const auto& element : uniqueStringsSet) {
-//         uniqueArray[index++] = element;
-//     }
-
-//     // Update the output parameter with the size of the unique array
-//     uniqueSize = uniqueStringsSet.size();
-
-//     return uniqueArray;
-// }
-
 // Function to create a bag of words with insertion order from an array of C-style strings
 std::map<std::string, int> createBagOfWords(char *textArray[], size_t arraySize, std::vector<std::string> &insertionOrder) {
     std::map<std::string, int> bagOfWords;
@@ -127,11 +107,11 @@ void prepingGPUMemory(double *&d_ALGEBRAIC, int num_of_algebraic, int sample_siz
 
     printf("Copying sample files to GPU memory space \n");
     cudaMalloc(&d_ic50, sample_size * 14 * sizeof(double));
-    // cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+    //cvar declared manually below
     cudaMalloc(&d_conc, sample_size * sizeof(double));
 
     cudaMemcpy(d_ic50, ic50, sample_size * 14 * sizeof(double), cudaMemcpyHostToDevice);
-    // cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
+    
     cudaMemcpy(d_conc, conc, sample_size * sizeof(double), cudaMemcpyHostToDevice);
     cudaMemcpy(d_p_param, p_param, sizeof(param_t), cudaMemcpyHostToDevice);
 }
@@ -443,6 +423,8 @@ int main(int argc, char **argv) {
         cudaSetDevice(p_param->gpu_index);
 
         if (p_param->is_cvar == true) {
+            cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
+            cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
             int cvar_sample = get_cvar_data_from_file(p_param->cvar_file, sample_size, cvar);
             printf("Reading: %d Conductance Variability samples\n", cvar_sample);
         }
