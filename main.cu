@@ -255,6 +255,7 @@ int get_cvar_data_from_file(const char *file_name, unsigned int limit, double *c
         printf("Cannot open file %s\n",
                file_name);
     }
+    printf("cvar file %s\n", file_name);
     idx = 0;
     int sample_size = 0;
     fgets(buffer_cvar, sizeof(buffer_cvar), fp_cvar);                                             // skip header
@@ -423,9 +424,12 @@ int main(int argc, char **argv) {
         cudaSetDevice(p_param->gpu_index);
 
         if (p_param->is_cvar == true) {
+            printf("inter-individual variability is on\n samples:\n");
+            cvar = (double *)malloc(18 * sample_limit * sizeof(double));
+            int cvar_sample = get_cvar_data_from_file(p_param->cvar_file, sample_size, cvar);
+            printf("%lf,%lf,%lf,%lf,%lf\n",cvar[0],cvar[1],cvar[2],cvar[3],cvar[4]);
             cudaMalloc(&d_cvar, sample_size * 18 * sizeof(double));
             cudaMemcpy(d_cvar, cvar, sample_size * 18 * sizeof(double), cudaMemcpyHostToDevice);
-            int cvar_sample = get_cvar_data_from_file(p_param->cvar_file, sample_size, cvar);
             printf("Reading: %d Conductance Variability samples\n", cvar_sample);
         }
 
