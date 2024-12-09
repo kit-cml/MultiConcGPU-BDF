@@ -838,15 +838,16 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
 {
   ___initConsts(CONSTANTS, STATES, type, bcl, offset);
 
-   if(is_cvar == true){
-		___applyCvar(CONSTANTS, cvar, offset);
-	}
+  //  if(is_cvar == true){
+	// 	___applyCvar(CONSTANTS, cvar, offset);
+	// }
 
   if (offset == 0){
   printf("Celltype: %lf\n", CONSTANTS[celltype]);
   printf("Concentration: %lf\n", conc);
-  printf("Control: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n",
-      CONSTANTS[PCa_b], CONSTANTS[GK1_b], CONSTANTS[GKs_b], CONSTANTS[GNa], CONSTANTS[GNaL_b], CONSTANTS[Gto_b], CONSTANTS[GKr_b]);
+  printf("Control: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n \n\nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n",
+      CONSTANTS[PCa_b], CONSTANTS[GK1_b], CONSTANTS[GKs_b], CONSTANTS[GNa], CONSTANTS[GNaL_b], CONSTANTS[Gto_b], CONSTANTS[GKr_b],
+      CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNa], CONSTANTS[GNaL], CONSTANTS[Gto], CONSTANTS[GKr]);
   }
 
   applyDrugEffect(CONSTANTS, conc, hill, offset);
@@ -874,6 +875,16 @@ __device__ void initConsts(double *CONSTANTS, double *STATES, double type, doubl
   printf("Bootstraped hERG binding: \nKmax:%lf \nKu:%lf \nn:%lf \nhalfmax:%lf \nVhalf:%lf \nD:%lf \nKt:%lf\n",
       CONSTANTS[Kmax], CONSTANTS[Ku], CONSTANTS[n], CONSTANTS[halfmax], CONSTANTS[Vhalf], STATES[D], CONSTANTS[Kt]);
   }
+
+
+
+  if(is_cvar == true && offset == 0){  
+    ___applyCvar(CONSTANTS, cvar, offset);
+    printf("\n");
+    printf("After cvar: \nPCa:%lf \nGK1:%lf \nGKs:%lf \nGNa:%lf \nGNaL:%lf \nGto:%lf \nGKr:%lf\n",
+      CONSTANTS[PCa], CONSTANTS[GK1], CONSTANTS[GKs], CONSTANTS[GNa], CONSTANTS[GNaL], CONSTANTS[Gto], CONSTANTS[GKr]);
+		
+	}
   
 }
 
