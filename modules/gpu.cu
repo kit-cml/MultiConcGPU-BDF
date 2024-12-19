@@ -33,7 +33,7 @@ __device__ void kernel_DoDrugSim(double *d_ic50, double *d_cvar, double d_conc, 
     
     unsigned int input_counter = 0;
 
-    int num_of_constants = 206;
+    int num_of_constants= 208;
     int num_of_states = 49;
     int num_of_algebraic = 200;
     int num_of_rates = 49;
